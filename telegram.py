@@ -36,7 +36,7 @@ def send_message_to_topic(bot_token, chat_id, message_thread_id, text):
     response.raise_for_status()
     return response.json()
 
-bot_token = '7353127945:AAH4dcBGH-pPbm5ABv0tEO4Cu6_Pv5iJXRQ'
+bot_token = 'TOKEN KEY BOT'
 updates = get_updates(bot_token)
 
 # Imprimir las actualizaciones para depuración
