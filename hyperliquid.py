@@ -3,10 +3,12 @@ from getPrice import get_price_and_supply
 
 def send_telegram_message(message):
     bot_token = '7353127945:AAH4dcBGH-pPbm5ABv0tEO4Cu6_Pv5iJXRQ'
-    chat_id = '2073678371/118'
+    chat_id = '-1001832858874'
+    message_thread_id = '128899'
     url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
     payload = {
         'chat_id': chat_id,
+        'message_thread_id': message_thread_id,
         'text': message
     }
     try:
@@ -33,33 +35,37 @@ def get_twap_data(token):
         print(f"Other error occurred: {err}")  # Handle other errors
     return None
 
-def check_conditions(item, token_price, circulating_supply):
-    try:
-        s_value = float(item['action']['twap']['s']) * float(token_price)
-        ended_value = item.get('ended', None)
-        mcap_token = float(circulating_supply) * float(token_price)
-
-        if (s_value >= (mcap_token * 0.00001)) and (ended_value is None):
-            return True
-        else:
-            return False
-    except KeyError as e:
-        print(f"Key error: {e}")
-        return False
+def check_conditions(total_s_value, mcap_token):
+    return total_s_value >= (mcap_token * 0.005)
 
 def getTwap(token):
     token_price, circulating_supply = get_price_and_supply(token)
     if token_price and circulating_supply:
         data = get_twap_data(token)
         if data:
+            buy_twap_total = 0
+            sell_twap_total = 0
             for item in data:
-                if check_conditions(item, token_price, circulating_supply):
-                    print(f"Matching TWAP data found for {token}:")
-                    action_type = "Buy" if item['action']['twap']['b'] else "Sell"
-                    twap_value = round(float(item['action']['twap']['s']) * float(token_price))
-                    message = f"{action_type} TWAP {twap_value}$ token {token}"
-                    print(message)
-                    send_telegram_message(message)
+                if item.get('ended', None) is None:  # Verificar que el TWAP no haya finalizado
+                    s_value = float(item['action']['twap']['s']) * float(token_price)
+                    if item['action']['twap']['b']:
+                        buy_twap_total += s_value
+                    else:
+                        sell_twap_total += s_value
+            
+            mcap_token = float(circulating_supply) * float(token_price)
+            
+            if check_conditions(buy_twap_total, mcap_token):
+                buy_percentage = (buy_twap_total / mcap_token) * 100
+                buy_message = f"Buy TWAP {round(buy_twap_total)}$ token {token} ({round(buy_percentage, 2)}% of circulating supply)"
+                print(buy_message)
+                send_telegram_message(buy_message)
+                
+            if check_conditions(sell_twap_total, mcap_token):
+                sell_percentage = (sell_twap_total / mcap_token) * 100
+                sell_message = f"Sell TWAP {round(sell_twap_total)}$ token {token} ({round(sell_percentage, 2)}% of circulating supply)"
+                print(sell_message)
+                send_telegram_message(sell_message)
         else:
             print(f"Failed to retrieve TWAP data for {token}.")
     else:

@@ -11,7 +11,7 @@ while True:
     for token in tokens:
         getTwap(token)
         time.sleep(5)
-    time.sleep(600)
+    time.sleep(300)
 
 
 
