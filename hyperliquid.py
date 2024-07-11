@@ -1,14 +1,20 @@
+import os
 import requests
+from dotenv import load_dotenv
 from getPrice import get_price_and_supply
 
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
+
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+CHAT_ID = os.getenv('CHAT_ID')
+MESSAGE_THREAD_ID = os.getenv('MESSAGE_THREAD_ID')
+
 def send_telegram_message(message):
-    bot_token = '7353127945:AAH4dcBGH-pPbm5ABv0tEO4Cu6_Pv5iJXRQ'
-    chat_id = '-1001832858874'
-    message_thread_id = '128899'
-    url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
+    url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
     payload = {
-        'chat_id': chat_id,
-        'message_thread_id': message_thread_id,
+        'chat_id': CHAT_ID,
+        'message_thread_id': MESSAGE_THREAD_ID,
         'text': message
     }
     try:
